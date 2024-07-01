@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidatorFn, AbstractControl } from '@angular/forms';
 import { GoogleMapComponent } from '../../components/google-map/google-map.component';
 import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
-import { TripService } from '../../services/trip-service';
+import { TripService } from '../../services/trip.service';
 import { Trip } from '../../models/trip.model';
 
 @Component({
