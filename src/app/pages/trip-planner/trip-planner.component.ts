@@ -1,28 +1,18 @@
-import {
-  Component,
-  OnInit,
-  AfterViewInit,
-  ViewChild,
-  ElementRef,
-} from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  ReactiveFormsModule,
-  FormBuilder,
-  FormGroup,
-  Validators,
-  ValidatorFn,
-  AbstractControl,
-} from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidatorFn, AbstractControl } from '@angular/forms';
 import { GoogleMapComponent } from '../../components/google-map/google-map.component';
 import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
+import { TripService } from '../../services/trip-service';
+import { Trip } from '../../models/trip.model';
 
 @Component({
   selector: 'app-trip-planner',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, GoogleMapComponent],
+  providers: [TripService, GoogleMapsLoaderService],
   templateUrl: './trip-planner.component.html',
-  styleUrls: ['./trip-planner.component.scss'],
+  styleUrls: ['./trip-planner.component.scss']
 })
 export class TripPlannerComponent implements OnInit, AfterViewInit {
   tripForm!: FormGroup;
@@ -31,7 +21,8 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
 
   constructor(
     private fb: FormBuilder,
-    private mapsLoader: GoogleMapsLoaderService
+    private mapsLoader: GoogleMapsLoaderService,
+    private tripService: TripService
   ) {}
 
   ngOnInit() {
@@ -43,22 +34,17 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
   }
 
   private initForm() {
-    this.tripForm = this.fb.group(
-      {
-        origin: ['', Validators.required],
-        destination: ['', Validators.required],
-        startDate: ['', Validators.required],
-        endDate: ['', Validators.required],
-        travelers: [1, [Validators.required, Validators.min(1)]],
-        budget: [0, [Validators.required, Validators.min(0)]],
-      },
-      { validators: this.dateRangeValidator }
-    );
+    this.tripForm = this.fb.group({
+      origin: ['', Validators.required],
+      destination: ['', Validators.required],
+      startDate: ['', Validators.required],
+      endDate: ['', Validators.required],
+      travelers: [1, [Validators.required, Validators.min(1)]],
+      budget: [0, [Validators.required, Validators.min(0)]]
+    }, { validators: this.dateRangeValidator });
   }
 
-  dateRangeValidator: ValidatorFn = (
-    control: AbstractControl
-  ): { [key: string]: any } | null => {
+  dateRangeValidator: ValidatorFn = (control: AbstractControl): {[key: string]: any} | null => {
     const start = control.get('startDate');
     const end = control.get('endDate');
 
@@ -66,15 +52,21 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
       const startDate = new Date(start.value);
       const endDate = new Date(end.value);
       const isRangeValid = endDate.getTime() >= startDate.getTime();
-      return isRangeValid ? null : { dateRange: true };
+      return isRangeValid ? null : { 'dateRange': true };
     }
     return null;
-  };
+  }
 
   onSubmit() {
     if (this.tripForm.valid) {
-      console.log('Trip details:', this.tripForm.value);
+      const newTrip: Trip = {
+        id: '', // This will be set by the service
+        ...this.tripForm.value
+      };
+      this.tripService.saveTrip(newTrip);
+      console.log('Trip saved:', newTrip);
       this.updateMap();
+      this.tripForm.reset();
     }
   }
 

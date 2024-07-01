@@ -18,10 +18,10 @@
         <div class="form-group">
           <label for="endDate">Data zakończenia:</label>
           <input id="endDate" formControlName="endDate" type="date">
+          <div *ngIf="tripForm.errors?.['dateRange']" class="error-message">
+            Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.
+          </div>
         </div>
-      </div>
-      <div *ngIf="tripForm.errors?.['dateRange']" class="error-message">
-        Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.
       </div>
       <div class="form-row">
         <div class="form-group">
