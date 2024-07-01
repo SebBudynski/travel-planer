@@ -1,1 +1,39 @@
-<p>trip-planner works!</p>
+<div class="trip-planner-container">
+    <form [formGroup]="tripForm" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="origin">Początek podróży:</label>
+          <input id="origin" formControlName="origin" type="text">
+        </div>
+        <div class="form-group">
+          <label for="destination">Cel podróży:</label>
+          <input id="destination" formControlName="destination" type="text">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="startDate">Data rozpoczęcia:</label>
+          <input id="startDate" formControlName="startDate" type="date">
+        </div>
+        <div class="form-group">
+          <label for="endDate">Data zakończenia:</label>
+          <input id="endDate" formControlName="endDate" type="date">
+        </div>
+      </div>
+      <div *ngIf="tripForm.errors?.['dateRange']" class="error-message">
+        Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="travelers">Liczba podróżnych:</label>
+          <input id="travelers" formControlName="travelers" type="number">
+        </div>
+        <div class="form-group">
+          <label for="budget">Budżet:</label>
+          <input id="budget" formControlName="budget" type="number">
+        </div>
+      </div>
+      <button type="submit" [disabled]="!tripForm.valid">Zaplanuj podróż</button>
+    </form>
+    <div #mapContainer class="map-container"></div>
+  </div>
