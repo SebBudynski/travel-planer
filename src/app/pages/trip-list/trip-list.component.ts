@@ -1,8 +1,6 @@
-// src/app/pages/trip-list/trip-list.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { Router } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { TripService } from '../../services/trip.service';
 import { Trip } from '../../models/trip.model';
 
@@ -11,38 +9,27 @@ import { Trip } from '../../models/trip.model';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <h2>Twoje zaplanowane podróże</h2>
-    <div *ngIf="trips.length === 0">
-      Nie masz jeszcze żadnych zaplanowanych podróży.
+    <div class="container">
+      <h2>Twoje zaplanowane podróże</h2>
+      <div *ngIf="trips.length === 0" class="card empty-state">
+        Nie masz jeszcze żadnych zaplanowanych podróży.
+      </div>
+      <div *ngIf="trips.length > 0" class="grid">
+        <div *ngFor="let trip of trips" class="card trip-card">
+          <h3>{{ trip.destination }}</h3>
+          <p><strong>Początek podróży:</strong> {{ trip.origin }}</p>
+          <p><strong>Data:</strong> {{ trip.startDate }} - {{ trip.endDate }}</p>
+          <p><strong>Liczba podróżujących:</strong> {{ trip.travelers }}</p>
+          <p><strong>Budżet:</strong> {{ trip.budget }} PLN</p>
+          <div class="button-group">
+            <button (click)="editTrip(trip.id)" class="btn btn-secondary">Edytuj</button>
+            <button (click)="deleteTrip(trip.id)" class="btn btn-outline">Usuń</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <ul *ngIf="trips.length > 0">
-      <li *ngFor="let trip of trips">
-        <h3>{{ trip.destination }}</h3>
-        <p>Od: {{ trip.startDate }} Do: {{ trip.endDate }}</p>
-        <p>Liczba podróżujących: {{ trip.travelers }}</p>
-        <p>Budżet: {{ trip.budget }} PLN</p>
-        <button (click)="editTrip(trip.id)">Edytuj</button>
-        <button (click)="deleteTrip(trip.id)">Usuń</button>
-      </li>
-    </ul>
   `,
-  styles: [
-    `
-      ul {
-        list-style-type: none;
-        padding: 0;
-      }
-      li {
-        border: 1px solid #ddd;
-        margin-bottom: 10px;
-        padding: 10px;
-        border-radius: 5px;
-      }
-      button {
-        margin-right: 10px;
-      }
-    `,
-  ],
+  styleUrls: ['./trip-list.component.scss']
 })
 export class TripListComponent implements OnInit {
   trips: Trip[] = [];
@@ -64,7 +51,7 @@ export class TripListComponent implements OnInit {
   deleteTrip(id: string): void {
     if (confirm('Czy na pewno chcesz usunąć tę podróż?')) {
       this.tripService.deleteTrip(id);
-      this.loadTrips(); // Odświeżamy listę po usunięciu
+      this.loadTrips();
     }
   }
 }
