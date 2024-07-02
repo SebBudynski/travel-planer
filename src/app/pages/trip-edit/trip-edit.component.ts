@@ -10,59 +10,10 @@ import { Trip } from '../../models/trip.model';
   selector: 'app-trip-edit',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  template: `
-    <h2>Edytuj podróż</h2>
-    <form [formGroup]="tripForm" (ngSubmit)="onSubmit()">
-      <div>
-        <label for="destination">Cel podróży:</label>
-        <input id="destination" formControlName="destination" type="text">
-      </div>
-      <div>
-        <label for="startDate">Data rozpoczęcia:</label>
-        <input id="startDate" formControlName="startDate" type="date">
-      </div>
-      <div>
-        <label for="endDate">Data zakończenia:</label>
-        <input id="endDate" formControlName="endDate" type="date">
-      </div>
-      <div>
-        <label for="travelers">Liczba podróżujących:</label>
-        <input id="travelers" formControlName="travelers" type="number">
-      </div>
-      <div>
-        <label for="budget">Budżet:</label>
-        <input id="budget" formControlName="budget" type="number">
-      </div>
-      <button type="submit" [disabled]="!tripForm.valid">Zapisz zmiany</button>
-    </form>
-  `,
-  styles: [`
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    label {
-      font-weight: bold;
-    }
-    input {
-      padding: 5px;
-      border-radius: 3px;
-      border: 1px solid #ccc;
-    }
-    button {
-      padding: 10px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-    }
-    button:disabled {
-      background-color: #cccccc;
-    }
-  `]
+  templateUrl: './trip-edit.component.html',
+  styleUrls: [`./trip-edit.component.scss`]
 })
+
 export class TripEditComponent implements OnInit {
   tripForm!: FormGroup;
   tripId!: string;

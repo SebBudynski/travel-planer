@@ -1,4 +1,8 @@
-@import '../../../styles/variables';
+@import "../../../styles/variables";
+
+.container {
+  min-height: 85vh;
+}
 
 .empty-state {
   text-align: center;

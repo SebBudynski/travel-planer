@@ -1,1 +1,26 @@
-<p>trip-edit works!</p>
+<div class="container">
+    <h2>Edytuj podróż</h2>
+    <form [formGroup]="tripForm" (ngSubmit)="onSubmit()">
+      <div>
+        <label for="destination">Cel podróży:</label>
+        <input id="destination" formControlName="destination" type="text">
+      </div>
+      <div>
+        <label for="startDate">Data rozpoczęcia:</label>
+        <input id="startDate" formControlName="startDate" type="date">
+      </div>
+      <div>
+        <label for="endDate">Data zakończenia:</label>
+        <input id="endDate" formControlName="endDate" type="date">
+      </div>
+      <div>
+        <label for="travelers">Liczba podróżujących:</label>
+        <input id="travelers" formControlName="travelers" type="number">
+      </div>
+      <div>
+        <label for="budget">Budżet:</label>
+        <input id="budget" formControlName="budget" type="number">
+      </div>
+      <button type="submit" [disabled]="!tripForm.valid">Zapisz zmiany</button>
+    </form>
+  </div>
