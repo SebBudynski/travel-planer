@@ -1,10 +1,10 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidatorFn, AbstractControl } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidatorFn, AbstractControl, FormArray } from '@angular/forms';
 import { GoogleMapComponent } from '../../components/google-map/google-map.component';
 import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
 import { TripService } from '../../services/trip.service';
-import { Trip } from '../../models/trip.model';
+import { Trip, DayPlan, PackingItem, ImportantInfo } from '../../models/trip.model';
 
 @Component({
   selector: 'app-trip-planner',
@@ -18,6 +18,11 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
   tripForm!: FormGroup;
   @ViewChild('mapContainer') mapContainer!: ElementRef;
   private map: google.maps.Map | null = null;
+  visibleSections: { [key: string]: boolean } = {
+    dayPlans: false,
+    packingList: false,
+    importantInfo: false
+  };
 
   constructor(
     private fb: FormBuilder,
@@ -40,8 +45,27 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
       startDate: ['', Validators.required],
       endDate: ['', Validators.required],
       travelers: [1, [Validators.required, Validators.min(1)]],
-      budget: [0, [Validators.required, Validators.min(0)]]
+      budget: [0, [Validators.required, Validators.min(0)]],
+      dayPlans: this.fb.array([]),
+      packingList: this.fb.array([]),
+      importantInfo: this.fb.array([])
     }, { validators: this.dateRangeValidator });
+  }
+
+  get dayPlansFormArray() {
+    return this.tripForm.get('dayPlans') as FormArray;
+  }
+
+  get packingListFormArray() {
+    return this.tripForm.get('packingList') as FormArray;
+  }
+
+  get importantInfoFormArray() {
+    return this.tripForm.get('importantInfo') as FormArray;
+  }
+
+  getActivitiesFormArray(dayIndex: number): FormArray {
+    return this.dayPlansFormArray.at(dayIndex).get('activities') as FormArray;
   }
 
   dateRangeValidator: ValidatorFn = (control: AbstractControl): {[key: string]: any} | null => {
@@ -57,6 +81,53 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
     return null;
   }
 
+  toggleSection(section: string) {
+    this.visibleSections[section] = !this.visibleSections[section];
+  }
+
+  isSectionVisible(section: string): boolean {
+    return this.visibleSections[section];
+  }
+
+  addDayPlan() {
+    this.dayPlansFormArray.push(this.fb.group({
+      date: ['', Validators.required],
+      activities: this.fb.array([])
+    }));
+  }
+
+  addActivity(dayPlanIndex: number) {
+    const activities = this.getActivitiesFormArray(dayPlanIndex);
+    activities.push(this.fb.control('', Validators.required));
+  }
+
+  addPackingItem() {
+    this.packingListFormArray.push(this.createPackingItem(''));
+  }
+
+  addImportantInfo() {
+    this.importantInfoFormArray.push(this.createImportantInfo('', ''));
+  }
+
+  private createPackingItem(name: string): FormGroup {
+    return this.fb.group({
+      name: [name, Validators.required],
+      packed: [false]
+    });
+  }
+
+  private createImportantInfo(category: string, details: string): FormGroup {
+    return this.fb.group({
+      category: [category, Validators.required],
+      details: [details, Validators.required]
+    });
+  }
+
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.tripForm.get(fieldName);
+    return field ? (field.invalid && (field.dirty || field.touched)) : false;
+  }
+
   onSubmit() {
     if (this.tripForm.valid) {
       const newTrip: Trip = {
@@ -67,7 +138,19 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
       console.log('Trip saved:', newTrip);
       this.updateMap();
       this.tripForm.reset();
+    } else {
+      this.markFormGroupTouched(this.tripForm);
     }
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup | FormArray) {
+    Object.values(formGroup.controls).forEach(control => {
+      if (control instanceof FormGroup || control instanceof FormArray) {
+        this.markFormGroupTouched(control);
+      } else {
+        control.markAsTouched();
+      }
+    });
   }
 
   private async initMap() {

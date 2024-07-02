@@ -1,5 +1,6 @@
+// src/app/services/trip.service.ts
 import { Injectable } from '@angular/core';
-import { Trip } from '../models/trip.model';
+import { Trip, DayPlan, PackingItem, ImportantInfo } from '../models/trip.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,7 @@ export class TripService {
     const trips = this.getTrips();
     trip.id = this.generateId();
     trips.push(trip);
-    this.saveTrips(trips);
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(trips));
   }
 
   getTrips(): Trip[] {
@@ -30,16 +31,12 @@ export class TripService {
     const index = trips.findIndex(trip => trip.id === updatedTrip.id);
     if (index !== -1) {
       trips[index] = updatedTrip;
-      this.saveTrips(trips);
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(trips));
     }
   }
 
   deleteTrip(id: string): void {
     const trips = this.getTrips().filter(trip => trip.id !== id);
-    this.saveTrips(trips);
-  }
-
-  private saveTrips(trips: Trip[]): void {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(trips));
   }
 

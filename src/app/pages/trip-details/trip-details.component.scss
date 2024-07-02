@@ -1,0 +1,50 @@
+// src/app/pages/trip-details/trip-details.component.scss
+@import '../../../styles/variables';
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h2, h3, h4 {
+  color: $primary-color;
+  margin-bottom: 15px;
+}
+
+.trip-info, .day-plans, .packing-list, .important-info {
+  background-color: white;
+  border-radius: $border-radius;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: $box-shadow;
+}
+
+ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+li {
+  margin-bottom: 10px;
+}
+
+.packing-list {
+  li {
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .packed {
+    text-decoration: line-through;
+    color: #888;
+  }
+}
+
+.btn {
+  margin-top: 20px;
+}
+
+.day-plan {
+  margin-bottom: 15px;
+}

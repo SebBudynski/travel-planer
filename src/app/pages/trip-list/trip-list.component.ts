@@ -18,18 +18,27 @@ import { Trip } from '../../models/trip.model';
         <div *ngFor="let trip of trips" class="card trip-card">
           <h3>{{ trip.destination }}</h3>
           <p><strong>Początek podróży:</strong> {{ trip.origin }}</p>
-          <p><strong>Data:</strong> {{ trip.startDate }} - {{ trip.endDate }}</p>
+          <p>
+            <strong>Data:</strong> {{ trip.startDate }} - {{ trip.endDate }}
+          </p>
           <p><strong>Liczba podróżujących:</strong> {{ trip.travelers }}</p>
           <p><strong>Budżet:</strong> {{ trip.budget }} PLN</p>
           <div class="button-group">
-            <button (click)="editTrip(trip.id)" class="btn btn-secondary">Edytuj</button>
-            <button (click)="deleteTrip(trip.id)" class="btn btn-outline">Usuń</button>
+            <button (click)="editTrip(trip.id)" class="btn btn-secondary">
+              Edytuj
+            </button>
+            <a [routerLink]="['/trip', trip.id]" class="btn btn-primary"
+              >Szczegóły</a
+            >
+            <button (click)="deleteTrip(trip.id)" class="btn btn-outline">
+              Usuń
+            </button>
           </div>
         </div>
       </div>
     </div>
   `,
-  styleUrls: ['./trip-list.component.scss']
+  styleUrls: ['./trip-list.component.scss'],
 })
 export class TripListComponent implements OnInit {
   trips: Trip[] = [];

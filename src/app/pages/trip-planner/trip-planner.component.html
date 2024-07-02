@@ -1,39 +1,113 @@
 <div class="trip-planner-container">
-    <form [formGroup]="tripForm" (ngSubmit)="onSubmit()">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="origin">Początek podróży:</label>
-          <input id="origin" formControlName="origin" type="text">
-        </div>
-        <div class="form-group">
-          <label for="destination">Cel podróży:</label>
-          <input id="destination" formControlName="destination" type="text">
+  <form [formGroup]="tripForm" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="origin">Początek podróży:</label>
+        <input id="origin" formControlName="origin" type="text">
+        <div *ngIf="isFieldInvalid('origin')" class="error-message">
+          Proszę podać początek podróży.
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="startDate">Data rozpoczęcia:</label>
-          <input id="startDate" formControlName="startDate" type="date">
+      <div class="form-group">
+        <label for="destination">Cel podróży:</label>
+        <input id="destination" formControlName="destination" type="text">
+        <div *ngIf="isFieldInvalid('destination')" class="error-message">
+          Proszę podać cel podróży.
         </div>
-        <div class="form-group">
-          <label for="endDate">Data zakończenia:</label>
-          <input id="endDate" formControlName="endDate" type="date">
-          <div *ngIf="tripForm.errors?.['dateRange']" class="error-message">
-            Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="startDate">Data rozpoczęcia:</label>
+        <input id="startDate" formControlName="startDate" type="date">
+        <div *ngIf="isFieldInvalid('startDate')" class="error-message">
+          Proszę wybrać datę rozpoczęcia.
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="endDate">Data zakończenia:</label>
+        <input id="endDate" formControlName="endDate" type="date">
+        <div *ngIf="isFieldInvalid('endDate')" class="error-message">
+          Proszę wybrać datę zakończenia.
+        </div>
+      </div>
+    </div>
+    <div *ngIf="tripForm.errors?.['dateRange']" class="error-message">
+      Data zakończenia musi być późniejsza niż data rozpoczęcia.
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="travelers">Liczba podróżujących:</label>
+        <input id="travelers" formControlName="travelers" type="number">
+        <div *ngIf="isFieldInvalid('travelers')" class="error-message">
+          Proszę podać liczbę podróżujących (minimum 1).
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="budget">Budżet:</label>
+        <input id="budget" formControlName="budget" type="number">
+        <div *ngIf="isFieldInvalid('budget')" class="error-message">
+          Proszę podać budżet (minimum 0).
+        </div>
+      </div>
+    </div>
+
+    <!-- Opcjonalne sekcje -->
+    <div class="optional-sections">
+      <div class="section-header" (click)="toggleSection('dayPlans')">
+        <h3>Plany dnia</h3>
+        <span class="toggle-icon">{{ isSectionVisible('dayPlans') ? '▼' : '▶' }}</span>
+      </div>
+      <div *ngIf="isSectionVisible('dayPlans')" formArrayName="dayPlans" class="day-plans-section">
+        <button type="button" (click)="addDayPlan()" class="btn btn-secondary">Dodaj dzień</button>
+        <ng-container *ngIf="dayPlansFormArray">
+          <div *ngFor="let dayPlan of dayPlansFormArray.controls; let i = index" [formGroupName]="i" class="day-plan">
+            <input formControlName="date" type="date">
+            <div formArrayName="activities">
+              <ng-container *ngIf="getActivitiesFormArray(i)">
+                <div *ngFor="let activity of getActivitiesFormArray(i).controls; let j = index">
+                  <input [formControlName]="j" type="text" placeholder="Aktywność">
+                </div>
+              </ng-container>
+              <button type="button" (click)="addActivity(i)" class="btn btn-secondary">Dodaj aktywność</button>
+            </div>
           </div>
-        </div>
+        </ng-container>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="travelers">Liczba podróżnych:</label>
-          <input id="travelers" formControlName="travelers" type="number">
-        </div>
-        <div class="form-group">
-          <label for="budget">Budżet:</label>
-          <input id="budget" formControlName="budget" type="number">
-        </div>
+
+      <div class="section-header" (click)="toggleSection('packingList')">
+        <h3>Lista rzeczy do spakowania</h3>
+        <span class="toggle-icon">{{ isSectionVisible('packingList') ? '▼' : '▶' }}</span>
       </div>
-      <button type="submit" [disabled]="!tripForm.valid">Zaplanuj podróż</button>
-    </form>
-    <div #mapContainer class="map-container"></div>
-  </div>
+      <div *ngIf="isSectionVisible('packingList')" formArrayName="packingList" class="packing-list-section">
+        <ng-container *ngIf="packingListFormArray">
+          <div *ngFor="let item of packingListFormArray.controls; let i = index" [formGroupName]="i" class="packing-item">
+            <input formControlName="name" type="text" placeholder="Nazwa przedmiotu">
+            <input formControlName="packed" type="checkbox">
+          </div>
+        </ng-container>
+        <button type="button" (click)="addPackingItem()" class="btn btn-secondary">Dodaj przedmiot</button>
+      </div>
+
+      <div class="section-header" (click)="toggleSection('importantInfo')">
+        <h3>Ważne informacje</h3>
+        <span class="toggle-icon">{{ isSectionVisible('importantInfo') ? '▼' : '▶' }}</span>
+      </div>
+      <div *ngIf="isSectionVisible('importantInfo')" formArrayName="importantInfo" class="important-info-section">
+        <ng-container *ngIf="importantInfoFormArray">
+          <div *ngFor="let info of importantInfoFormArray.controls; let i = index" [formGroupName]="i" class="important-info-item">
+            <input formControlName="category" type="text" placeholder="Kategoria">
+            <input formControlName="details" type="text" placeholder="Szczegóły">
+          </div>
+        </ng-container>
+        <button type="button" (click)="addImportantInfo()" class="btn btn-secondary">Dodaj informację</button>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Zaplanuj podróż</button>
+  </form>
+
+  <div #mapContainer class="map-container"></div>
+</div>
