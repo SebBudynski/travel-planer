@@ -1,5 +1,5 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidatorFn, AbstractControl, FormArray } from '@angular/forms';
 import { GoogleMapComponent } from '../../components/google-map/google-map.component';
 import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
@@ -10,7 +10,7 @@ import { Trip, DayPlan, PackingItem, ImportantInfo } from '../../models/trip.mod
   selector: 'app-trip-planner',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, GoogleMapComponent],
-  providers: [TripService, GoogleMapsLoaderService],
+  providers: [TripService, GoogleMapsLoaderService, DatePipe],
   templateUrl: './trip-planner.component.html',
   styleUrls: ['./trip-planner.component.scss']
 })
@@ -27,7 +27,8 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
   constructor(
     private fb: FormBuilder,
     private mapsLoader: GoogleMapsLoaderService,
-    private tripService: TripService
+    private tripService: TripService,
+    private datePipe: DatePipe
   ) {}
 
   ngOnInit() {
@@ -42,8 +43,8 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
     this.tripForm = this.fb.group({
       origin: ['', Validators.required],
       destination: ['', Validators.required],
-      startDate: ['', Validators.required],
-      endDate: ['', Validators.required],
+      startDate: ['', [Validators.required, this.dateValidator]],
+      endDate: ['', [Validators.required, this.dateValidator]],
       travelers: [1, [Validators.required, Validators.min(1)]],
       budget: [0, [Validators.required, Validators.min(0)]],
       dayPlans: this.fb.array([]),
@@ -68,17 +69,33 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
     return this.dayPlansFormArray.at(dayIndex).get('activities') as FormArray;
   }
 
+  dateValidator(control: AbstractControl): { [key: string]: any } | null {
+    const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+    if (!dateRegex.test(control.value)) {
+      return { 'invalidDate': true };
+    }
+    return null;
+  }
+
   dateRangeValidator: ValidatorFn = (control: AbstractControl): {[key: string]: any} | null => {
     const start = control.get('startDate');
     const end = control.get('endDate');
-
+  
     if (start && end && start.value && end.value) {
-      const startDate = new Date(start.value);
-      const endDate = new Date(end.value);
+      const startDate = this.parseDate(start.value);
+      const endDate = this.parseDate(end.value);
+      console.log('Start date:', startDate);
+      console.log('End date:', endDate);
       const isRangeValid = endDate.getTime() >= startDate.getTime();
+      console.log('Is range valid:', isRangeValid);
       return isRangeValid ? null : { 'dateRange': true };
     }
     return null;
+  }
+
+  private parseDate(dateString: string): Date {
+    const [day, month, year] = dateString.split('/');
+    return new Date(+year, +month - 1, +day);
   }
 
   toggleSection(section: string) {
@@ -90,11 +107,23 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
   }
 
   addDayPlan() {
-    this.dayPlansFormArray.push(this.fb.group({
-      date: ['', Validators.required],
+    const today = new Date();
+    const formattedDate = this.formatDateForInput(today);
+    const newDayPlan = this.fb.group({
+      date: [formattedDate, [Validators.required, this.dateValidator]],
       activities: this.fb.array([])
-    }));
+    });
+    this.dayPlansFormArray.push(newDayPlan);
+    console.log('Day plan added:', newDayPlan.value);
+    console.log('Day plans array:', this.dayPlansFormArray.value);
   }
+
+private formatDateForInput(date: Date): string {
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
 
   addActivity(dayPlanIndex: number) {
     const activities = this.getActivitiesFormArray(dayPlanIndex);
@@ -128,19 +157,47 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
     return field ? (field.invalid && (field.dirty || field.touched)) : false;
   }
 
+  checkRequiredFields() {
+    const requiredFields = ['origin', 'destination', 'startDate', 'endDate', 'travelers', 'budget'];
+    requiredFields.forEach(field => {
+      const control = this.tripForm.get(field);
+      if (control?.value === '' || control?.value === null) {
+        console.log(`Field ${field} is empty`);
+      }
+    });
+  }
+
   onSubmit() {
+    console.log('Form validity:', this.tripForm.valid);
+    console.log('Form value:', this.tripForm.value);
+    console.log('Form errors:', this.tripForm.errors);
+    
     if (this.tripForm.valid) {
       const newTrip: Trip = {
-        id: '', // This will be set by the service
-        ...this.tripForm.value
+        ...this.tripForm.value,
+        startDate: this.formatDate(this.tripForm.value.startDate),
+        endDate: this.formatDate(this.tripForm.value.endDate),
+        id: '' // This will be set by the service
       };
       this.tripService.saveTrip(newTrip);
       console.log('Trip saved:', newTrip);
       this.updateMap();
       this.tripForm.reset();
     } else {
+      console.log('Form is invalid. Errors:', this.tripForm.errors);
+      Object.keys(this.tripForm.controls).forEach(key => {
+        const control = this.tripForm.get(key);
+        if (control?.invalid) {
+          console.log(`Control ${key} is invalid:`, control.errors);
+        }
+      });
       this.markFormGroupTouched(this.tripForm);
     }
+  }
+
+  private formatDate(dateString: string): string {
+    const [day, month, year] = dateString.split('/');
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
 
   private markFormGroupTouched(formGroup: FormGroup | FormArray) {
@@ -151,6 +208,7 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
         control.markAsTouched();
       }
     });
+    this.checkRequiredFields()
   }
 
   private async initMap() {

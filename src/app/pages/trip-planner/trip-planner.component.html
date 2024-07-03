@@ -19,17 +19,17 @@
 
     <div class="form-row">
       <div class="form-group">
-        <label for="startDate">Data rozpoczęcia:</label>
-        <input id="startDate" formControlName="startDate" type="date">
+        <label for="startDate">Data rozpoczęcia (DD/MM/YYYY):</label>
+        <input id="startDate" formControlName="startDate" type="text" placeholder="DD/MM/YYYY">
         <div *ngIf="isFieldInvalid('startDate')" class="error-message">
-          Proszę wybrać datę rozpoczęcia.
+          Proszę podać poprawną datę w formacie DD/MM/YYYY.
         </div>
       </div>
       <div class="form-group">
-        <label for="endDate">Data zakończenia:</label>
-        <input id="endDate" formControlName="endDate" type="date">
+        <label for="endDate">Data zakończenia (DD/MM/YYYY):</label>
+        <input id="endDate" formControlName="endDate" type="text" placeholder="DD/MM/YYYY">
         <div *ngIf="isFieldInvalid('endDate')" class="error-message">
-          Proszę wybrać datę zakończenia.
+          Proszę podać poprawną datę w formacie DD/MM/YYYY.
         </div>
       </div>
     </div>
