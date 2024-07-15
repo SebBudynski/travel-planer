@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidatorFn, A
 import { GoogleMapComponent } from '../../components/google-map/google-map.component';
 import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
 import { TripService } from '../../services/trip.service';
-import { Trip, DayPlan, PackingItem, ImportantInfo } from '../../models/trip.model';
+import { Trip} from '../../models/trip.model';
 
 @Component({
   selector: 'app-trip-planner',
@@ -27,8 +27,7 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
   constructor(
     private fb: FormBuilder,
     private mapsLoader: GoogleMapsLoaderService,
-    private tripService: TripService,
-    private datePipe: DatePipe
+    private tripService: TripService
   ) {}
 
   ngOnInit() {

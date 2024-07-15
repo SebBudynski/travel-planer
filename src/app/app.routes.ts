@@ -4,48 +4,41 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./pages/home/home.component').then((m) => m.HomeComponent),
+      import('./pages/home/home.component').then(c => c.HomeComponent),
   },
   {
     path: 'trip/:id',
     loadComponent: () =>
       import('./pages/trip-details/trip-details.component').then(
-        (m) => m.TripDetailsComponent
+        c => c.TripDetailsComponent
       ),
   },
   {
     path: 'plan',
     loadComponent: () =>
       import('./pages/trip-planner/trip-planner.component').then(
-        (m) => m.TripPlannerComponent
+        c => c.TripPlannerComponent
       ),
   },
   {
     path: 'trips',
     loadComponent: () =>
       import('./pages/trip-list/trip-list.component').then(
-        (m) => m.TripListComponent
+        c => c.TripListComponent
       ),
   },
   {
     path: 'trip/:id',
     loadComponent: () =>
       import('./pages/trip-details/trip-details.component').then(
-        (m) => m.TripDetailsComponent
-      ),
-  },
-  {
-    path: 'edit-trip/:id',
-    loadComponent: () =>
-      import('./pages/trip-edit/trip-edit.component').then(
-        (m) => m.TripEditComponent
+        c => c.TripDetailsComponent
       ),
   },
   {
     path: 'profile',
     loadComponent: () =>
       import('./pages/user-profile/user-profile.component').then(
-        (m) => m.UserProfileComponent
+        c => c.UserProfileComponent
       ),
   },
 ];

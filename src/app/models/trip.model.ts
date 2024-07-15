@@ -1,4 +1,3 @@
-// src/app/models/trip.model.ts
 export interface Trip {
   id: string;
   destination: string;
