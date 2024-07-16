@@ -28,10 +28,10 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'trip/:id',
+    path: 'trip-edit/:id',
     loadComponent: () =>
-      import('./pages/trip-details/trip-details.component').then(
-        c => c.TripDetailsComponent
+      import('./pages/trip-edit/trip-edit.component').then(
+        c => c.TripEditComponent
       ),
   },
   {

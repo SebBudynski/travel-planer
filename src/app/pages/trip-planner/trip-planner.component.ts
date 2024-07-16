@@ -1,23 +1,20 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidatorFn, AbstractControl, FormArray } from '@angular/forms';
-import { GoogleMapComponent } from '../../components/google-map/google-map.component';
-import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { TripService } from '../../services/trip.service';
-import { Trip} from '../../models/trip.model';
+import { Trip } from '../../models/trip.model';
+import { TripMapComponent } from '../trip-map/trip-map.component';
 
 @Component({
   selector: 'app-trip-planner',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, GoogleMapComponent],
-  providers: [TripService, GoogleMapsLoaderService, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, TripMapComponent],
+  providers: [TripService, DatePipe],
   templateUrl: './trip-planner.component.html',
   styleUrls: ['./trip-planner.component.scss']
 })
-export class TripPlannerComponent implements OnInit, AfterViewInit {
+export class TripPlannerComponent implements OnInit {
   tripForm!: FormGroup;
-  @ViewChild('mapContainer') mapContainer!: ElementRef;
-  private map: google.maps.Map | null = null;
   visibleSections: { [key: string]: boolean } = {
     dayPlans: false,
     packingList: false,
@@ -26,30 +23,37 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
 
   constructor(
     private fb: FormBuilder,
-    private mapsLoader: GoogleMapsLoaderService,
-    private tripService: TripService
+    private tripService: TripService,
+    private datePipe: DatePipe
   ) {}
 
   ngOnInit() {
     this.initForm();
   }
 
-  async ngAfterViewInit() {
-    await this.initMap();
-  }
-
   private initForm() {
     this.tripForm = this.fb.group({
       origin: ['', Validators.required],
       destination: ['', Validators.required],
-      startDate: ['', [Validators.required, this.dateValidator]],
-      endDate: ['', [Validators.required, this.dateValidator]],
+      startDate: ['', Validators.required],
+      endDate: ['', Validators.required],
       travelers: [1, [Validators.required, Validators.min(1)]],
       budget: [0, [Validators.required, Validators.min(0)]],
       dayPlans: this.fb.array([]),
       packingList: this.fb.array([]),
       importantInfo: this.fb.array([])
-    }, { validators: this.dateRangeValidator });
+    });
+
+    // Subskrybcja zmian w polach dat
+    this.tripForm.get('startDate')?.valueChanges.subscribe(value => {
+      const formattedDate = this.datePipe.transform(value, 'dd/MM/yyyy');
+      this.tripForm.get('startDate')?.setValue(formattedDate, { emitEvent: false });
+    });
+
+    this.tripForm.get('endDate')?.valueChanges.subscribe(value => {
+      const formattedDate = this.datePipe.transform(value, 'dd/MM/yyyy');
+      this.tripForm.get('endDate')?.setValue(formattedDate, { emitEvent: false });
+    });
   }
 
   get dayPlansFormArray() {
@@ -68,35 +72,6 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
     return this.dayPlansFormArray.at(dayIndex).get('activities') as FormArray;
   }
 
-  dateValidator(control: AbstractControl): { [key: string]: any } | null {
-    const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-    if (!dateRegex.test(control.value)) {
-      return { 'invalidDate': true };
-    }
-    return null;
-  }
-
-  dateRangeValidator: ValidatorFn = (control: AbstractControl): {[key: string]: any} | null => {
-    const start = control.get('startDate');
-    const end = control.get('endDate');
-  
-    if (start && end && start.value && end.value) {
-      const startDate = this.parseDate(start.value);
-      const endDate = this.parseDate(end.value);
-      console.log('Start date:', startDate);
-      console.log('End date:', endDate);
-      const isRangeValid = endDate.getTime() >= startDate.getTime();
-      console.log('Is range valid:', isRangeValid);
-      return isRangeValid ? null : { 'dateRange': true };
-    }
-    return null;
-  }
-
-  private parseDate(dateString: string): Date {
-    const [day, month, year] = dateString.split('/');
-    return new Date(+year, +month - 1, +day);
-  }
-
   toggleSection(section: string) {
     this.visibleSections[section] = !this.visibleSections[section];
   }
@@ -109,7 +84,7 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
     const today = new Date();
     const formattedDate = this.formatDateForInput(today);
     const newDayPlan = this.fb.group({
-      date: [formattedDate, [Validators.required, this.dateValidator]],
+      date: [formattedDate, [Validators.required]],
       activities: this.fb.array([])
     });
     this.dayPlansFormArray.push(newDayPlan);
@@ -117,12 +92,12 @@ export class TripPlannerComponent implements OnInit, AfterViewInit {
     console.log('Day plans array:', this.dayPlansFormArray.value);
   }
 
-private formatDateForInput(date: Date): string {
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-}
+  private formatDateForInput(date: Date): string {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
 
   addActivity(dayPlanIndex: number) {
     const activities = this.getActivitiesFormArray(dayPlanIndex);
@@ -170,7 +145,7 @@ private formatDateForInput(date: Date): string {
     console.log('Form validity:', this.tripForm.valid);
     console.log('Form value:', this.tripForm.value);
     console.log('Form errors:', this.tripForm.errors);
-    
+
     if (this.tripForm.valid) {
       const newTrip: Trip = {
         ...this.tripForm.value,
@@ -180,7 +155,6 @@ private formatDateForInput(date: Date): string {
       };
       this.tripService.saveTrip(newTrip);
       console.log('Trip saved:', newTrip);
-      this.updateMap();
       this.tripForm.reset();
     } else {
       console.log('Form is invalid. Errors:', this.tripForm.errors);
@@ -193,7 +167,7 @@ private formatDateForInput(date: Date): string {
       this.markFormGroupTouched(this.tripForm);
     }
   }
-
+  
   private formatDate(dateString: string): string {
     const [day, month, year] = dateString.split('/');
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
@@ -209,60 +183,5 @@ private formatDateForInput(date: Date): string {
     });
     this.checkRequiredFields()
   }
-
-  private async initMap() {
-    try {
-      await this.mapsLoader.load();
-      const mapOptions: google.maps.MapOptions = {
-        center: { lat: 0, lng: 0 },
-        zoom: 2,
-        minZoom: 2,
-        maxZoom: 18,
-        restriction: {
-          latLngBounds: {
-            north: 85,
-            south: -85,
-            west: -180,
-            east: 180,
-          },
-          strictBounds: true,
-        },
-      };
-      this.map = new google.maps.Map(
-        this.mapContainer.nativeElement,
-        mapOptions
-      );
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
-  }
-
-  private updateMap() {
-    if (!this.map) return;
-
-    const geocoder = new google.maps.Geocoder();
-    geocoder.geocode(
-      { address: this.tripForm.get('destination')?.value },
-      (results, status) => {
-        if (
-          status === google.maps.GeocoderStatus.OK &&
-          results &&
-          results[0] &&
-          this.map
-        ) {
-          this.map.setCenter(results[0].geometry.location);
-          this.map.setZoom(10);
-          new google.maps.Marker({
-            map: this.map,
-            position: results[0].geometry.location,
-          });
-        } else {
-          console.error(
-            'Geocode was not successful for the following reason:',
-            status
-          );
-        }
-      }
-    );
-  }
 }
+ 

@@ -3,7 +3,7 @@
     <div class="form-row">
       <div class="form-group">
         <label for="origin">Początek podróży:</label>
-        <input id="origin" formControlName="origin" type="text">
+        <input id="origin" formControlName="origin" type="date">
         <div *ngIf="isFieldInvalid('origin')" class="error-message">
           Proszę podać początek podróży.
         </div>
@@ -109,5 +109,5 @@
     <button type="submit" class="btn btn-primary">Zaplanuj podróż</button>
   </form>
 
-  <div #mapContainer class="map-container"></div>
+  <app-trip-map [destination]="tripForm.get('destination')?.value"></app-trip-map>
 </div>
